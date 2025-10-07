@@ -12,15 +12,15 @@ High-end banking system with the newest tech available. Will provide speed, accu
 
 
 
-\*\* In—Repo Drafts \*\*
+* **In—Repo Drafts**
 
-— \[Design: User Stories \& Acceptance]
+  * [Design: User Stories & Acceptance]
 
-\- \[Design: Architecture \& Components]
+  * [Design: Architecture & Components]
 
-\- \[Design: Data \& Content]
+  * [Design: Data & Content]
 
-\- \[Design: Risks Constraints]
+  * [Design: Risks Constraints]
 
 
 
