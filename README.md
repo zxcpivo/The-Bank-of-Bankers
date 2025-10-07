@@ -4,7 +4,23 @@ High-end banking system with the newest tech available. Will provide speed, accu
 
 **Project Docs**
 
-- **Wiki**
-    - [Wiki Home]
-    - [Design (Wiki)]
-    - [Proposal (Wiki)]
+* **Wiki**
+
+  * \[Wiki Home]
+  * \[Design (Wiki)]
+  * \[Proposal (Wiki)]
+
+
+
+\*\* In—Repo Drafts \*\*
+
+— \[Design: User Stories \& Acceptance]
+
+\- \[Design: Architecture \& Components]
+
+\- \[Design: Data \& Content]
+
+\- \[Design: Risks Constraints]
+
+
+
