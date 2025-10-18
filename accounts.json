@@ -1,0 +1,14 @@
+{
+    "joe_doe": {
+        "password": "pass1",
+        "pin": "1111",
+        "balance": 1500.0,
+        "transaction_history": []
+    },
+    "jane_smith": {
+        "password": "pass2",
+        "pin": "1234",
+        "balance": 2500.0,
+        "transaction_history": []
+    }
+}
