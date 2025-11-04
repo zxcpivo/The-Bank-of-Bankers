@@ -2,13 +2,48 @@
     "joe_doe": {
         "password": "pass1",
         "pin": "1111",
-        "balance": 1500.0,
-        "transaction_history": []
+        "balance": 1600.0,
+        "transaction_history": [
+            {
+                "type": "deposit",
+                "amount": 200.0
+            },
+            {
+                "type": "withdrawal",
+                "amount": 200.0
+            },
+            {
+                "type": "transfer",
+                "amount": 300.0,
+                "to": "jane_smith"
+            }
+        ]
     },
     "jane_smith": {
         "password": "pass2",
         "pin": "1234",
-        "balance": 2500.0,
-        "transaction_history": []
+        "balance": 2000.0,
+        "transaction_history": [
+            {
+                "type": "transfer",
+                "amount": 300.0,
+                "from": "joe_doe"
+            },
+            {
+                "type": "withdrawal",
+                "amount": 800.0
+            }
+        ]
+    },
+    "john_wick": {
+        "password": "pass3",
+        "pin": 4321,
+        "balance": 500.0,
+        "transaction_history": [
+            {
+                "type": "deposit",
+                "amount": 500.0
+            }
+        ]
     }
 }
