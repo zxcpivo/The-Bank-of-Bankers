@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+from collections import Counter
+from getpass import getpass
 
 def clear_screen() -> None:
     try:
@@ -27,7 +29,7 @@ def render_header(title: str, subtitle: str | None = None) -> None:
     print()
 
 class UserAccount:
-    def __init__(self, username: str, password: str, pin: int, balance: float = 0.0) -> None:
+    def __init__(self, username: str, password: str, pin: str, balance: float = 0.0) -> None:
         self.username = username
         self.password = password
         self.pin = pin
@@ -67,6 +69,16 @@ class UserAccount:
             "from": self.username
         })
 
+def get_top_payees(user: UserAccount, limit: int = 3) -> list[str]:
+    counts = Counter()
+
+    for t in user.transaction_history:
+        if t.get("type") == "transfer" and "to" in t:
+            counts[t["to"]] += 1
+
+    return [uname for uname, _ in counts.most_common(limit)]
+
+
 def _save_accounts(accounts: dict, filepath: str = 'accounts.json') -> None:
     data = {}
     for uname, acct in accounts.items():
@@ -78,6 +90,17 @@ def _save_accounts(accounts: dict, filepath: str = 'accounts.json') -> None:
         }
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=4)
+
+def verify_pin(user: UserAccount):
+    pin_input = getpass("Enter your 4-digit PIN to confirm: ").strip()
+
+    if not pin_input.isdigit() or len(pin_input) != 4:
+        return False, "PIN must be a 4-digit number."
+
+    if pin_input != str(user.pin):
+        return False, "Incorrect PIN."
+
+    return True, ""
 
 def user_session(user: UserAccount, accounts: dict) -> None:
     status = ""
@@ -101,23 +124,64 @@ def user_session(user: UserAccount, accounts: dict) -> None:
         if choice == '1':
             status = f"Current balance: ${user.balance:.2f}"
         elif choice == '2':
-            try:
-                amount = float(input("Amount to deposit: "))
-                user.deposit(amount)
-                _save_accounts(accounts)
-                status = f"Deposited ${amount:.2f}. New balance: ${user.balance:.2f}"
-            except Exception as e:
-                status = f"Deposit failed: {e}"
+            ok, msg = verify_pin(user)
+            if not ok:
+                status = f"Deposit cancelled. {msg}"
+            else:
+                try:
+                    amount = float(input("Amount to deposit: "))
+                    user.deposit(amount)
+                    _save_accounts(accounts)
+                    status = f"Deposited ${amount:.2f}. New balance: ${user.balance:.2f}"
+                except Exception as e:
+                    status = f"Deposit failed: {e}"
         elif choice == '3':
-            try:
-                amount = float(input("Amount to withdraw: "))
-                user.withdraw(amount)
-                _save_accounts(accounts)
-                status = f"Withdrew ${amount:.2f}. New balance: ${user.balance:.2f}"
-            except Exception as e:
-                status = f"Withdrawal failed: {e}"
+            ok, msg = verify_pin(user)
+            if not ok:
+                status = f"Withdrawal cancelled. {msg}"
+            else:
+                try:
+                    amount = float(input("Amount to withdraw: "))
+                    user.withdraw(amount)
+                    _save_accounts(accounts)
+                    status = f"Withdrew ${amount:.2f}. New balance: ${user.balance:.2f}"
+                except Exception as e:
+                    status = f"Withdrawal failed: {e}"
         elif choice == '4':
-            recipient = input("Recipient username: ").strip()
+            ok, msg = verify_pin(user)
+            if not ok:
+                status = f"Transfer cancelled. {msg}"
+                continue
+
+            top_payees = get_top_payees(user)
+
+            print()
+
+            if top_payees:
+                print("Your top payees:")
+                for i, payee in enumerate(top_payees, start=1):
+                    print(f"  {i}) {payee}")
+                print("\nYou can enter 1–3 to pick a payee above,")
+                print("or type a username manually.")
+            else:
+                print("You don't have any payees yet.")
+                print("Type the recipient's username to make your first transfer.")
+
+            print()
+            recipient_choice = input("Recipient (username or 1–3): ").strip()
+
+            recipient = None
+            if recipient_choice.isdigit() and top_payees:
+                index = int(recipient_choice)
+                if 1 <= index <= len(top_payees):
+                    recipient = top_payees[index - 1]
+                elif 1 <= index <= 3:
+                    status = "Invalid payee selection."
+                    continue
+
+            if recipient is None:
+                recipient = recipient_choice
+
             if recipient not in accounts:
                 status = "No such recipient."
             elif recipient == user.username:
@@ -201,7 +265,7 @@ def main() -> None:
                 continue
             password = input("Choose a password: ").strip()
             try:
-                pin = int(input("Choose a 4-digit PIN: ").strip())
+                pin = getpass("Choose a 4-digit PIN: ").strip()
             except ValueError:
                 status = "PIN must be numeric."
                 continue
