@@ -2,25 +2,34 @@
     "joe_doe": {
         "password": "pass1",
         "pin": "1111",
-        "balance": 1000.0,
+        "balance": 6000.0,
         "transaction_history": [
             {
                 "type": "deposit",
-                "amount": 200.0
+                "amount": 200.0,
+                "date": "2025-09-01 10:00:00"
             },
             {
                 "type": "withdrawal",
-                "amount": 200.0
+                "amount": 200.0,
+                "date": "2025-09-05 14:30:00"
             },
             {
                 "type": "transfer",
                 "amount": 300.0,
-                "to": "jane_smith"
+                "to": "jane_smith",
+                "date": "2025-09-10 09:15:00"
             },
             {
                 "type": "transfer",
                 "amount": 600.0,
-                "to": "jane_smith"
+                "to": "jane_smith",
+                "date": "2025-09-20 16:45:00"
+            },
+            {
+                "type": "deposit",
+                "amount": 5000.0,
+                "date": "2025-10-01 11:00:00"
             }
         ]
     },
@@ -32,16 +41,19 @@
             {
                 "type": "transfer",
                 "amount": 300.0,
-                "from": "joe_doe"
+                "from": "joe_doe",
+                "date": "2025-09-10 09:15:00"
             },
             {
                 "type": "withdrawal",
-                "amount": 800.0
+                "amount": 800.0,
+                "date": "2025-09-15 12:00:00"
             },
             {
                 "type": "transfer",
                 "amount": 600.0,
-                "from": "joe_doe"
+                "from": "joe_doe",
+                "date": "2025-09-20 16:45:00"
             }
         ]
     },
@@ -52,11 +64,13 @@
         "transaction_history": [
             {
                 "type": "deposit",
-                "amount": 500.0
+                "amount": 500.0,
+                "date": "2025-10-05 08:30:00"
             },
             {
                 "type": "deposit",
-                "amount": 200.0
+                "amount": 200.0,
+                "date": "2025-10-10 15:20:00"
             }
         ]
     }
