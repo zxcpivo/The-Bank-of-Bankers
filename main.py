@@ -3,6 +3,7 @@ import os
 import sys
 from collections import Counter
 from getpass import getpass
+from datetime import datetime
 
 def clear_screen() -> None:
     try:
@@ -41,7 +42,8 @@ class UserAccount:
         self.balance += amount
         self.transaction_history.append({
             "type": "deposit",
-            "amount": amount
+            "amount": amount,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
     def withdraw(self, amount: float) -> None:
@@ -50,7 +52,8 @@ class UserAccount:
         self.balance -= amount
         self.transaction_history.append({
             "type": "withdrawal",
-            "amount": amount
+            "amount": amount,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
     
     def transfer(self, amount: float, recipient_account) -> None:
@@ -61,12 +64,14 @@ class UserAccount:
         self.transaction_history.append({
             "type": "transfer",
             "amount": amount,
-            "to": recipient_account.username
+            "to": recipient_account.username,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         recipient_account.transaction_history.append({
             "type": "transfer",
             "amount": amount,
-            "from": self.username
+            "from": self.username,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
 
 def get_top_payees(user: UserAccount, limit: int = 3) -> list[str]:
@@ -92,7 +97,10 @@ def _save_accounts(accounts: dict, filepath: str = 'accounts.json') -> None:
         json.dump(data, f, indent=4)
 
 def verify_pin(user: UserAccount):
-    pin_input = getpass("Enter your 4-digit PIN to confirm: ").strip()
+    pin_input = getpass("Enter your 4-digit PIN to confirm (or 'b' to back): ").strip()
+
+    if pin_input.lower() in ('b', 'back'):
+        return False, "Operation cancelled by user."
 
     if not pin_input.isdigit() or len(pin_input) != 4:
         return False, "PIN must be a 4-digit number."
@@ -129,10 +137,14 @@ def user_session(user: UserAccount, accounts: dict) -> None:
                 status = f"Deposit cancelled. {msg}"
             else:
                 try:
-                    amount = float(input("Amount to deposit: "))
-                    user.deposit(amount)
-                    _save_accounts(accounts)
-                    status = f"Deposited ${amount:.2f}. New balance: ${user.balance:.2f}"
+                    amount_str = input("Amount to deposit (or 'b' to back): ").strip()
+                    if amount_str.lower() in ('b', 'back'):
+                        status = "Deposit cancelled."
+                    else:
+                        amount = float(amount_str)
+                        user.deposit(amount)
+                        _save_accounts(accounts)
+                        status = f"Deposited ${amount:.2f}. New balance: ${user.balance:.2f}"
                 except Exception as e:
                     status = f"Deposit failed: {e}"
         elif choice == '3':
@@ -141,10 +153,14 @@ def user_session(user: UserAccount, accounts: dict) -> None:
                 status = f"Withdrawal cancelled. {msg}"
             else:
                 try:
-                    amount = float(input("Amount to withdraw: "))
-                    user.withdraw(amount)
-                    _save_accounts(accounts)
-                    status = f"Withdrew ${amount:.2f}. New balance: ${user.balance:.2f}"
+                    amount_str = input("Amount to withdraw (or 'b' to back): ").strip()
+                    if amount_str.lower() in ('b', 'back'):
+                        status = "Withdrawal cancelled."
+                    else:
+                        amount = float(amount_str)
+                        user.withdraw(amount)
+                        _save_accounts(accounts)
+                        status = f"Withdrew ${amount:.2f}. New balance: ${user.balance:.2f}"
                 except Exception as e:
                     status = f"Withdrawal failed: {e}"
         elif choice == '4':
@@ -168,7 +184,9 @@ def user_session(user: UserAccount, accounts: dict) -> None:
                 print("Type the recipient's username to make your first transfer.")
 
             print()
-            recipient_choice = input("Recipient (username or 1–3): ").strip()
+            recipient_choice = input("Recipient (username or 1–3, or 'b' to back): ").strip()
+            if recipient_choice.lower() in ('b', 'back'):
+                continue
 
             recipient = None
             if recipient_choice.isdigit() and top_payees:
@@ -188,13 +206,17 @@ def user_session(user: UserAccount, accounts: dict) -> None:
                 status = "Cannot transfer to yourself."
             else:
                 try:
-                    amount = float(input("Amount to transfer: "))
-                    user.transfer(amount, accounts[recipient])
-                    _save_accounts(accounts)
-                    status = (
-                        f"Transferred ${amount:.2f} to {recipient}. "
-                        f"New balance: ${user.balance:.2f}"
-                    )
+                    amount_str = input("Amount to transfer (or 'b' to back): ").strip()
+                    if amount_str.lower() in ('b', 'back'):
+                        status = "Transfer cancelled."
+                    else:
+                        amount = float(amount_str)
+                        user.transfer(amount, accounts[recipient])
+                        _save_accounts(accounts)
+                        status = (
+                            f"Transferred ${amount:.2f} to {recipient}. "
+                            f"New balance: ${user.balance:.2f}"
+                        )
                 except Exception as e:
                     status = f"Transfer failed: {e}"
         elif choice == '5':
@@ -203,13 +225,22 @@ def user_session(user: UserAccount, accounts: dict) -> None:
                 print("No transactions yet.")
             else:
                 for i, t in enumerate(user.transaction_history, 1):
-                    line = f"{i}. {t.get('type','?'):>9}  ${t.get('amount',0):.2f}"
+                    t_type = t.get('type', '?').title()
+                    amount = t.get('amount', 0)
+                    date_str = t.get('date', 'Unknown Date')
+                    try:
+                        dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                        date_display = dt.strftime("%y-%m-%d %H:%M")
+                    except ValueError:
+                        date_display = date_str
+                    
+                    details = ""
                     if t.get('type') == 'transfer':
                         if 'to' in t:
-                            line += f"  -> {t['to']}"
+                            details += f" -> {t['to']}"
                         if 'from' in t:
-                            line += f"  <- {t['from']}"
-                    print(line)
+                            details += f" <- {t['from']}"
+                    print(f"{i}. [{date_display}] {t_type}: ${amount:.2f}{details}")
             print()
             pause()
         elif choice == '6':
@@ -249,8 +280,12 @@ def main() -> None:
         status = ""
         
         if choice == '1':
-            username = input("Username: ").strip()
-            password = input("Password: ").strip()
+            username = input("Username (or 'b' to back): ").strip()
+            if username.lower() in ('b', 'back'):
+                continue
+            password = getpass("Password (or 'b' to back): ").strip()
+            if password.lower() in ('b', 'back'):
+                continue
             if username in accounts and accounts[username].password == password:
                 print(f"\nWelcome back, {username}!")
                 pause("Press Enter to continue...")
@@ -259,11 +294,15 @@ def main() -> None:
             else:
                 status = "Invalid username or password."
         elif choice == '2':
-            username = input("Choose a username: ").strip()
+            username = input("Choose a username (or 'b' to back): ").strip()
+            if username.lower() in ('b', 'back'):
+                continue
             if username in accounts:
                 status = "Username already exists."
                 continue
-            password = input("Choose a password: ").strip()
+            password = getpass("Choose a password (or 'b' to back): ").strip()
+            if password.lower() in ('b', 'back'):
+                continue
             try:
                 pin = getpass("Choose a 4-digit PIN: ").strip()
             except ValueError:
